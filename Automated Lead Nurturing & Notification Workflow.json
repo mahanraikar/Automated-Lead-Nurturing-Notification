@@ -1,0 +1,381 @@
+{
+  "name": "Automated Lead Nurturing & Notification Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1BbwvVJqMJiP1ClnvNZGpsdEgUWQ4mvA9Th1L34Nvq5s",
+          "mode": "list",
+          "cachedResultName": "Lead Form (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BbwvVJqMJiP1ClnvNZGpsdEgUWQ4mvA9Th1L34Nvq5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BbwvVJqMJiP1ClnvNZGpsdEgUWQ4mvA9Th1L34Nvq5s/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        144
+      ],
+      "id": "7ea8f4ad-39e6-476c-aa37-bc11af5090d9",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "xx5lDQINi2BJRKA0",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        144
+      ],
+      "id": "c6f54887-e583-45aa-9d1b-4625f1af10ec",
+      "name": "Wait",
+      "webhookId": "0745d488-f174-44c7-bf60-1e3666df9ada"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a lead nurturing assistant. Your job is to write an email to a new lead who just filled out the form on our website which is an AI consulting website. Your name is Pam and you work as a customer service representative for ABC corp. Make sure your email is friendly and always signs off in a professional way. You should never include any placeholders like [Lead's Name], [Your Name], [Your Company], etc. Please only address the lead by their first name if they entered their full name.\n\n\nHere is information about the lead:\nName: {{ $json.Name }}\nEmail:{{ $json['Email Address'] }}\nServices Interested In:{{ $json['Services Interested In'] }}\nBudget Range:{{ $json['Budget Range'] }}\nPreferred Contact Time:{{ $json['Preferred Contact Time'] }}\nProject Timeline:{{ $json['Project Timeline'] }}\nAdditional Comments:{{ $json['Additional Comments'] }}\n\nYour email should be very personalized based on what they entered into the form. You should thank them for their interest that they specified and include any relevant information. At the end please include a call to action like if they have any questions or if they'd like to schedule a discovery call.\n\nYou should also output three fields separately. One for the email subject called \"Subject\", one for the email body called \"Body\", and one called \"Tag\". The fields must always be \"Subject\", \"Body\", and \"Tag\" or the automation will break.\n\nThe subject should always start with \"ABC Corp:\" then a brief description of the email.\n\nHere is how you will decide the value for \"Tag\":\nHigh-Value Lead\nDescription: A lead with a high budget, interest in premium services, or specific, urgent needs.\nIndicators:\nBudget Range: Over $10,000\nService Interest: Premium Package, Consulting, or any high-value service\nProject Timeline: Immediate\nPurpose of Tagging: These leads represent significant business opportunities and should be prioritized. Follow-up should be prompt, offering premium service options and/or direct scheduling links.\n\nMedium-Value Lead\nDescription: A lead with a moderate budget and interest in standard services, expressing an intermediate level of urgency.\nIndicators:\nBudget Range: $5,000 - $10,000\nService Interest: Product Demo, Consulting, Standard Services\nProject Timeline: Within 1 month\nPurpose of Tagging: Medium-value leads are potential long-term clients. Tailor responses with mid-range offers, provide detailed resources about standard services, and include flexible scheduling options.\n\nLow-Value Lead\nDescription: A lead with a limited budget, flexible project timeline, and interest in basic services or initial exploration.\nIndicators:\nBudget Range: Under $5,000\nService Interest: Basic Package, Introductory Consultation\nProject Timeline: Flexible\nPurpose of Tagging: Leads tagged as low-value may be in early research stages or seeking cost-effective solutions. Offer introductory resources or suggest free consultation options to keep them engaged without high-priority follow-ups.\n\nHot Lead\nDescription: A lead with an immediate need or very short project timeline, regardless of budget.\nIndicators:\nProject Timeline: Immediate\nAdditional Comments: Specific language indicating urgency (e.g., “ASAP,” “urgent,” “start immediately”)\nPurpose of Tagging: \"Hot\" leads need prompt attention. Regardless of budget, schedule a follow-up within 24 hours or provide a direct call-to-action link (e.g., booking link) to expedite engagement.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        144
+      ],
+      "id": "41f1ba80-afd3-468e-aa30-3709f9dc7307",
+      "name": "Create Email & Tag",
+      "credentials": {
+        "openAiApi": {
+          "id": "r14ulgFe3InkIGxh",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json['Email Address'] }}",
+        "subject": "={{ $json.output[0].content[0].text.Body }}",
+        "emailType": "text",
+        "message": "={{ $json.output[0].content[0].text.Body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        -48
+      ],
+      "id": "86512925-37d8-402d-a4f1-e1ac5832677e",
+      "name": "Send a message",
+      "webhookId": "4b2bbbd5-655a-4564-8ce4-616e86dc23de",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KfEOAeKGQPjOIkxs",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BbwvVJqMJiP1ClnvNZGpsdEgUWQ4mvA9Th1L34Nvq5s",
+          "mode": "list",
+          "cachedResultName": "Lead Form (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BbwvVJqMJiP1ClnvNZGpsdEgUWQ4mvA9Th1L34Nvq5s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BbwvVJqMJiP1ClnvNZGpsdEgUWQ4mvA9Th1L34Nvq5s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Google Sheets Trigger').item.json.Name }}",
+            "Status": "={{ $('Google Sheets Trigger').item.json.Name }} was contacted by emailon {{ $now.format('MMMM dd,yyyy,h:mm a') }} }}. The team also been notified via slack",
+            "Tag": "={{ $json.output[0].content[0].text.Tag }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Services Interested In",
+              "displayName": "Services Interested In",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Budget Range",
+              "displayName": "Budget Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Preferred Contact Time",
+              "displayName": "Preferred Contact Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Project Timeline",
+              "displayName": "Project Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Additional Comments",
+              "displayName": "Additional Comments",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tag",
+              "displayName": "Tag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        144
+      ],
+      "id": "a59a0652-e3a9-4272-9458-bd415429710d",
+      "name": "Update Status & Tag",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "47W2DgKvdclzuTkz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A5MJ3TNKU",
+          "mode": "list",
+          "cachedResultName": "all-n8n"
+        },
+        "text": "=New {{ $json.output[0].content[0].text.Tag }} Alert!\nName:{{ $('Google Sheets Trigger').item.json.Name }}\nInterest:{{ $('Google Sheets Trigger').item.json['Services Interested In'] }}\nBudget:{{ $('Google Sheets Trigger').item.json['Budget Range'] }}\nCheck the lead in Google Sheets for more details! \nhttps://docs.google.com/spreadsheets/d/1BbwvVJqMJiP1ClnvNZGpsdEgUWQ4mvA9Th1L34Nvq5s/edit?usp=sharing\n",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        640,
+        368
+      ],
+      "id": "100135e0-9a65-4378-a4ad-7db5607aae68",
+      "name": "Notify Team",
+      "webhookId": "28d59e42-d3f8-4974-bef3-c1cb16d48dfb",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "exByhtNIZf4AipOd",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Create Email & Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Email & Tag": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Status & Tag",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cbcf245f-1d85-4b8f-9cab-5ba6924fba5c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "012a6327316f506aca6e62fe9f3eb5f0982739d25bb9862888f5727016e0a8bc"
+  },
+  "id": "MbDR7iJfGBZAoA4k",
+  "tags": []
+}
